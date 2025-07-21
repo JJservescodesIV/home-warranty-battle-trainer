@@ -1,0 +1,1119 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Warranty Battle Trainer</title>
+    <style>
+        :root {
+            --primary: #4e54c8;
+            --primary-dark: #363795;
+            --secondary: #fc466b;
+            --text: #333;
+            --light-text: #f5f5f5;
+            --bg: #f9f9f9;
+            --card-bg: #ffffff;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary));
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .game-title {
+            text-align: center;
+            color: var(--light-text);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .screen {
+            display: none;
+            background: var(--bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* Main Menu Screen */
+        .menu-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .menu-button {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            margin: 15px auto;
+            padding: 15px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .menu-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        
+        .menu-button:active {
+            transform: translateY(1px);
+        }
+        
+        /* Battle Screen */
+        .battle-screen {
+            position: relative;
+        }
+        
+        .battle-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .stats-area {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .character-stats, .enemy-stats {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            width: 48%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .health-bar {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--danger), var(--secondary));
+            width: 100%;
+            transition: width 0.5s ease-out;
+        }
+        
+        .character-health .health-fill {
+            background: linear-gradient(to right, var(--primary), var(--success));
+        }
+        
+        .level-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .battle-visuals {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            min-height: 200px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .battle-character, .battle-enemy {
+            width: 150px;
+            height: 150px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        
+        .battle-character img, .battle-enemy img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+        
+        .battle-character.attack {
+            animation: characterAttack 0.5s ease;
+        }
+        
+        .battle-enemy.hit {
+            animation: enemyHit 0.5s ease;
+        }
+        
+        .battle-enemy.attack {
+            animation: enemyAttack 0.5s ease;
+        }
+        
+        .battle-character.hit {
+            animation: characterHit 0.5s ease;
+        }
+        
+        .dialogue-box {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            min-height: 100px;
+            position: relative;
+        }
+        
+        .dialogue-text {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        .dialogue-portrait {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            bottom: -10px;
+            left: -10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .dialogue-portrait img {
+            width: 70%;
+            height: 70%;
+            object-fit: contain;
+        }
+        
+        .response-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .response-card {
+            background: var(--card-bg);
+            border: 2px solid var(--primary-dark);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .response-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        
+        .response-card.selected {
+            border-color: var(--success);
+            background-color: rgba(46, 204, 113, 0.1);
+        }
+        
+        .response-card.incorrect {
+            border-color: var(--danger);
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        .battle-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .battle-button {
+            padding: 12px 30px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .battle-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .battle-button:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Results Screen */
+        .results-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .results-header {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+        }
+        
+        .results-stats {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .rewards-section {
+            margin-top: 20px;
+        }
+        
+        .badge-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .badge {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(to bottom right, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        /* Animation effects */
+        .damage-text {
+            position: absolute;
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 1.5rem;
+            animation: damageFloat 1s ease-out forwards;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .heal-text {
+            position: absolute;
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.5rem;
+            animation: healFloat 1s ease-out forwards;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes characterAttack {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(50px); }
+            100% { transform: translateX(0); }
+        }
+        
+        @keyframes enemyAttack {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-50px); }
+            100% { transform: translateX(0); }
+        }
+        
+        @keyframes characterHit {
+            0% { transform: translateX(0); filter: brightness(1); }
+            25% { transform: translateX(-15px); filter: brightness(1.5); }
+            50% { transform: translateX(10px); filter: brightness(1.5); }
+            75% { transform: translateX(-5px); filter: brightness(1.2); }
+            100% { transform: translateX(0); filter: brightness(1); }
+        }
+        
+        @keyframes enemyHit {
+            0% { transform: translateX(0); filter: brightness(1); }
+            25% { transform: translateX(15px); filter: brightness(1.5); }
+            50% { transform: translateX(-10px); filter: brightness(1.5); }
+            75% { transform: translateX(5px); filter: brightness(1.2); }
+            100% { transform: translateX(0); filter: brightness(1); }
+        }
+        
+        @keyframes damageFloat {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        
+        @keyframes healFloat {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .battle-visuals {
+                min-height: 150px;
+            }
+            
+            .battle-character, .battle-enemy {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .response-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .dialogue-text {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .response-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="game-title">Home Warranty Battle Trainer</h1>
+        
+        <!-- Main Menu Screen -->
+        <div id="menuScreen" class="screen menu-screen active">
+            <h2>Welcome, Agent!</h2>
+            <p>Train your Home Warranty sales skills by battling customer objections!</p>
+            <button class="menu-button" id="startButton">Start Training</button>
+            <button class="menu-button" id="tutorialButton">Tutorial</button>
+            <button class="menu-button" id="statsButton">Agent Stats</button>
+        </div>
+        
+        <!-- Battle Screen -->
+        <div id="battleScreen" class="screen battle-screen">
+            <div class="battle-area">
+                <div class="stats-area">
+                    <div class="character-stats">
+                        <h3>Sales Agent</h3>
+                        <div class="health-bar character-health">
+                            <div class="health-fill" id="characterHealth"></div>
+                        </div>
+                        <div class="level-info">Level: <span id="characterLevel">1</span> | XP: <span id="characterXP">0</span>/<span id="characterNextXP">100</span></div>
+                    </div>
+                    <div class="enemy-stats">
+                        <h3>Customer Objection</h3>
+                        <div class="health-bar">
+                            <div class="health-fill" id="enemyHealth"></div>
+                        </div>
+                        <div class="level-info">Difficulty: <span id="enemyLevel">Easy</span></div>
+                    </div>
+                </div>
+                
+                <div class="battle-visuals">
+                    <div class="battle-character" id="characterSprite">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%234e54c8'/%3E%3Cpath d='M30 85 Q50 95 70 85 Q65 60 50 60 Q35 60 30 85' fill='%234e54c8'/%3E%3Ccircle cx='42' cy='25' r='5' fill='white'/%3E%3Ccircle cx='58' cy='25' r='5' fill='white'/%3E%3Ccircle cx='42' cy='25' r='2' fill='black'/%3E%3Ccircle cx='58' cy='25' r='2' fill='black'/%3E%3Cpath d='M40 40 Q50 45 60 40' fill='none' stroke='white' stroke-width='2'/%3E%3Crect x='40' y='55' width='20' height='10' fill='white'/%3E%3C/svg%3E" alt="Agent">
+                    </div>
+                    <div class="battle-enemy" id="enemySprite">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='30' r='20' fill='%23fc466b'/%3E%3Cpath d='M30 85 Q50 95 70 85 Q65 60 50 60 Q35 60 30 85' fill='%23fc466b'/%3E%3Ccircle cx='42' cy='25' r='5' fill='white'/%3E%3Ccircle cx='58' cy='25' r='5' fill='white'/%3E%3Ccircle cx='42' cy='25' r='2' fill='black'/%3E%3Ccircle cx='58' cy='25' r='2' fill='black'/%3E%3Cpath d='M40 45 Q50 40 60 45' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E" alt="Customer">
+                    </div>
+                </div>
+                
+                <div class="dialogue-box">
+                    <div class="dialogue-portrait">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23fc466b'/%3E%3Ccircle cx='35' cy='40' r='8' fill='white'/%3E%3Ccircle cx='65' cy='40' r='8' fill='white'/%3E%3Ccircle cx='35' cy='40' r='4' fill='black'/%3E%3Ccircle cx='65' cy='40' r='4' fill='black'/%3E%3Cpath d='M30 70 Q50 80 70 70' fill='none' stroke='white' stroke-width='4'/%3E%3C/svg%3E" alt="Customer">
+                    </div>
+                    <p class="dialogue-text" id="dialogueText">The battle is about to begin! Are you ready to face your customer's objections?</p>
+                </div>
+                
+                <div class="response-options" id="responseOptions">
+                    <!-- Response options will be populated here -->
+                </div>
+                
+                <div class="battle-controls">
+                    <button class="battle-button" id="actionButton">Start Battle</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen results-screen">
+            <h2 class="results-header" id="resultsHeader">Battle Complete!</h2>
+            
+            <div class="results-stats">
+                <div class="stat-item">
+                    <span>Correct Responses:</span>
+                    <span id="correctResponses">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>XP Gained:</span>
+                    <span id="xpGained">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>New Level:</span>
+                    <span id="newLevel">1</span>
+                </div>
+                <div class="stat-item">
+                    <span>Battles Won:</span>
+                    <span id="battlesWon">0</span>
+                </div>
+            </div>
+            
+            <div class="rewards-section">
+                <h3>Badges Earned</h3>
+                <div class="badge-container" id="badgeContainer">
+                    <!-- Badges will be populated here -->
+                </div>
+            </div>
+            
+            <button class="menu-button" id="continueButton">Continue Training</button>
+            <button class="menu-button" id="mainMenuButton">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            character: {
+                level: 1,
+                xp: 0,
+                nextLevelXP: 100,
+                maxHealth: 100,
+                currentHealth: 100,
+                battlesWon: 0
+            },
+            currentBattle: {
+                enemy: null,
+                phase: 'start', // start, playerTurn, enemyTurn, results
+                selectedResponse: null,
+                turns: 0,
+                correctResponses: 0,
+                battleComplete: false
+            },
+            badges: [],
+            unlockedContent: []
+        };
+
+        // Home Warranty Objections Database
+        const objectionsDatabase = [
+            {
+                id: 1,
+                type: "cost",
+                statement: "I think a home warranty is too expensive for what it offers.",
+                difficulty: "Easy",
+                health: 60,
+                responses: [
+                    {
+                        text: "I understand your concern about cost. Let me show you how the warranty can actually save you money in the long run.",
+                        effectiveness: "high",
+                        feedback: "Great response! Acknowledging concerns and focusing on long-term value is effective."
+                    },
+                    {
+                        text: "Our warranty is actually very affordable compared to paying for repairs out of pocket.",
+                        effectiveness: "medium",
+                        feedback: "Good point about comparison, but it would be stronger with specific examples."
+                    },
+                    {
+                        text: "We offer different plans to fit your budget needs.",
+                        effectiveness: "medium",
+                        feedback: "Mentioning plan flexibility is good, but doesn't address the value concern directly."
+                    },
+                    {
+                        text: "Well, it's cheaper than what you'd pay for a single repair call.",
+                        effectiveness: "low",
+                        feedback: "This is a bit dismissive and makes an assumption without data to back it up."
+                    }
+                ]
+            },
+            {
+                id: 2,
+                type: "necessity",
+                statement: "My home is brand new. I don't think I need a warranty.",
+                difficulty: "Medium",
+                health: 80,
+                responses: [
+                    {
+                        text: "New homes are great, but even new appliances can have unexpected issues. The warranty provides peace of mind during your first years of ownership.",
+                        effectiveness: "high",
+                        feedback: "Excellent! You acknowledged their situation while highlighting the benefit of protection even for new equipment."
+                    },
+                    {
+                        text: "New homes often have more issues than you'd expect in the first year. You'll definitely need our coverage.",
+                        effectiveness: "low",
+                        feedback: "This comes across as trying to create fear without evidence and may damage trust."
+                    },
+                    {
+                        text: "A warranty complements your builder's warranty by covering items they might exclude, like appliance breakdowns due to normal use.",
+                        effectiveness: "high",
+                        feedback: "Great response that shows you understand the difference between warranties and provides specific value."
+                    },
+                    {
+                        text: "Even new homes need protection. You never know what might happen.",
+                        effectiveness: "medium",
+                        feedback: "The statement is true but vague. More specifics would make this more compelling."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                type: "experience",
+                statement: "I had a home warranty before and they denied my claim when I needed it.",
+                difficulty: "Hard",
+                health: 100,
+                responses: [
+                    {
+                        text: "I'm sorry you had that experience. Our company has a 95% claim approval rate, and I'd be happy to walk you through exactly what our warranty covers so there are no surprises.",
+                        effectiveness: "high",
+                        feedback: "Excellent! You showed empathy, provided a specific statistic, and offered transparency."
+                    },
+                    {
+                        text: "That's unfortunate. Not all warranty companies are the same though. We pride ourselves on excellent customer service.",
+                        effectiveness: "medium",
+                        feedback: "Good that you differentiated your company, but would be stronger with specific evidence."
+                    },
+                    {
+                        text: "Our warranty is different and better than what you had before.",
+                        effectiveness: "low",
+                        feedback: "This is a vague claim without supporting evidence and doesn't address their specific concern."
+                    },
+                    {
+                        text: "I understand your frustration. Let me explain how our claims process works and show you our coverage details, so you can see exactly what's covered and the few limitations that exist.",
+                        effectiveness: "high",
+                        feedback: "Great response that shows empathy and offers specific, transparent information."
+                    }
+                ]
+            },
+            {
+                id: 4,
+                type: "alternatives",
+                statement: "I prefer to just save money each month for potential repairs rather than pay for a warranty.",
+                difficulty: "Medium",
+                health: 75,
+                responses: [
+                    {
+                        text: "That's a disciplined approach. However, major repairs like an HVAC system can cost thousands - more than you might save in several years. Our warranty gives immediate protection without waiting to build savings.",
+                        effectiveness: "high",
+                        feedback: "Excellent! You respected their approach while highlighting the immediate value and protection against large expenses."
+                    },
+                    {
+                        text: "Saving is smart, but our warranty also provides the service of finding qualified contractors, which saves you time and hassle.",
+                        effectiveness: "high",
+                        feedback: "Great response highlighting an additional benefit beyond just the financial aspect."
+                    },
+                    {
+                        text: "Most people say that but end up spending their savings on other things when emergencies come up.",
+                        effectiveness: "low",
+                        feedback: "This comes across as dismissive of their financial management skills."
+                    },
+                    {
+                        text: "Saving money is good, but repairs are getting more expensive every year, especially for newer, more complex systems.",
+                        effectiveness: "medium",
+                        feedback: "This makes a valid point but could be stronger with specific data or examples."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                type: "coverage",
+                statement: "I've heard home warranties have too many exclusions and loopholes.",
+                difficulty: "Hard",
+                health: 90,
+                responses: [
+                    {
+                        text: "That's a common concern. I'd like to go through our coverage details with you line by line, and point out exactly what is and isn't covered so you can make an informed decision.",
+                        effectiveness: "high",
+                        feedback: "Excellent approach that acknowledges concerns and offers complete transparency."
+                    },
+                    {
+                        text: "We pride ourselves on clear terms and straightforward coverage. Here's our sample contract - I can highlight the few exclusions that exist and explain why they're there.",
+                        effectiveness: "high",
+                        feedback: "Great response offering transparency and education about the contract details."
+                    },
+                    {
+                        text: "Our warranty has fewer exclusions than most others on the market.",
+                        effectiveness: "low",
+                        feedback: "This is a comparative claim without evidence and doesn't address their specific concern."
+                    },
+                    {
+                        text: "All warranties have some exclusions, but ours covers all the major systems and appliances in your home.",
+                        effectiveness: "medium",
+                        feedback: "This acknowledges reality but is still somewhat vague. Specific examples would improve it."
+                    }
+                ]
+            }
+        ];
+
+        // DOM Elements
+        const menuScreen = document.getElementById('menuScreen');
+        const battleScreen = document.getElementById('battleScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        
+        const startButton = document.getElementById('startButton');
+        const tutorialButton = document.getElementById('tutorialButton');
+        const statsButton = document.getElementById('statsButton');
+        
+        const characterHealth = document.getElementById('characterHealth');
+        const enemyHealth = document.getElementById('enemyHealth');
+        const characterLevel = document.getElementById('characterLevel');
+        const characterXP = document.getElementById('characterXP');
+        const characterNextXP = document.getElementById('characterNextXP');
+        const enemyLevel = document.getElementById('enemyLevel');
+        
+        const characterSprite = document.getElementById('characterSprite');
+        const enemySprite = document.getElementById('enemySprite');
+        
+        const dialogueText = document.getElementById('dialogueText');
+        const responseOptions = document.getElementById('responseOptions');
+        const actionButton = document.getElementById('actionButton');
+        
+        const resultsHeader = document.getElementById('resultsHeader');
+        const correctResponses = document.getElementById('correctResponses');
+        const xpGained = document.getElementById('xpGained');
+        const newLevel = document.getElementById('newLevel');
+        const battlesWon = document.getElementById('battlesWon');
+        const badgeContainer = document.getElementById('badgeContainer');
+        
+        const continueButton = document.getElementById('continueButton');
+        const mainMenuButton = document.getElementById('mainMenuButton');
+
+        // Event Listeners
+        startButton.addEventListener('click', startGame);
+        tutorialButton.addEventListener('click', showTutorial);
+        statsButton.addEventListener('click', showStats);
+        actionButton.addEventListener('click', handleActionButton);
+        continueButton.addEventListener('click', continueBattle);
+        mainMenuButton.addEventListener('click', returnToMainMenu);
+
+        // Game Functions
+        function startGame() {
+            showScreen(battleScreen);
+            resetBattle();
+            setupBattle();
+        }
+        
+        function showTutorial() {
+            dialogueText.innerHTML = "Welcome to the tutorial! In this game, you'll face customer objections as if they were monsters in a battle. Choose the best responses to defeat them and level up your sales skills!";
+            showScreen(battleScreen);
+            gameState.currentBattle.phase = 'tutorial';
+            actionButton.textContent = "Continue Tutorial";
+            responseOptions.innerHTML = '';
+        }
+        
+        function showStats() {
+            dialogueText.innerHTML = `
+                <h3>Your Stats</h3>
+                <p>Level: ${gameState.character.level}</p>
+                <p>XP: ${gameState.character.xp}/${gameState.character.nextLevelXP}</p>
+                <p>Battles Won: ${gameState.character.battlesWon}</p>
+                <p>Badges: ${gameState.badges.length}</p>
+            `;
+            showScreen(battleScreen);
+            gameState.currentBattle.phase = 'stats';
+            actionButton.textContent = "Return to Menu";
+            responseOptions.innerHTML = '';
+        }
+        
+        function resetBattle() {
+            gameState.currentBattle = {
+                enemy: null,
+                phase: 'start',
+                selectedResponse: null,
+                turns: 0,
+                correctResponses: 0,
+                battleComplete: false
+            };
+            
+            gameState.character.currentHealth = gameState.character.maxHealth;
+            updateCharacterUI();
+        }
+        
+        function setupBattle() {
+            // Select a random objection
+            const randomIndex = Math.floor(Math.random() * objectionsDatabase.length);
+            gameState.currentBattle.enemy = { ...objectionsDatabase[randomIndex] };
+            gameState.currentBattle.enemy.currentHealth = gameState.currentBattle.enemy.health;
+            
+            updateEnemyUI();
+            
+            dialogueText.textContent = "A new customer approaches with an objection. Prepare yourself!";
+            actionButton.textContent = "Begin Conversation";
+            responseOptions.innerHTML = '';
+        }
+        
+        function updateCharacterUI() {
+            characterHealth.style.width = `${(gameState.character.currentHealth / gameState.character.maxHealth) * 100}%`;
+            characterLevel.textContent = gameState.character.level;
+            characterXP.textContent = gameState.character.xp;
+            characterNextXP.textContent = gameState.character.nextLevelXP;
+        }
+        
+        function updateEnemyUI() {
+            enemyHealth.style.width = `${(gameState.currentBattle.enemy.currentHealth / gameState.currentBattle.enemy.health) * 100}%`;
+            enemyLevel.textContent = gameState.currentBattle.enemy.difficulty;
+        }
+        
+        function handleActionButton() {
+            switch(gameState.currentBattle.phase) {
+                case 'start':
+                    startBattlePhase();
+                    break;
+                case 'tutorial':
+                    returnToMainMenu();
+                    break;
+                case 'stats':
+                    returnToMainMenu();
+                    break;
+                case 'playerTurn':
+                    if (gameState.currentBattle.selectedResponse !== null) {
+                        processPlayerResponse();
+                    } else {
+                        dialogueText.textContent = "You need to select a response first!";
+                    }
+                    break;
+                case 'enemyTurn':
+                    processEnemyResponse();
+                    break;
+                case 'results':
+                    showResultsScreen();
+                    break;
+            }
+        }
+        
+        function startBattlePhase() {
+            gameState.currentBattle.phase = 'playerTurn';
+            dialogueText.textContent = gameState.currentBattle.enemy.statement;
+            
+            // Display response options
+            displayResponseOptions();
+            
+            actionButton.textContent = "Submit Response";
+        }
+        
+        function displayResponseOptions() {
+            responseOptions.innerHTML = '';
+            
+            gameState.currentBattle.enemy.responses.forEach((response, index) => {
+                const responseCard = document.createElement('div');
+                responseCard.classList.add('response-card');
+                responseCard.textContent = response.text;
+                responseCard.dataset.index = index;
+                
+                responseCard.addEventListener('click', () => {
+                    // Deselect all other responses
+                    document.querySelectorAll('.response-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                    
+                    // Select this response
+                    responseCard.classList.add('selected');
+                    gameState.currentBattle.selectedResponse = index;
+                });
+                
+                responseOptions.appendChild(responseCard);
+            });
+        }
+        
+        function processPlayerResponse() {
+            const selectedResponse = gameState.currentBattle.enemy.responses[gameState.currentBattle.selectedResponse];
+            let damage = 0;
+            
+            switch(selectedResponse.effectiveness) {
+                case 'high':
+                    damage = Math.floor(gameState.currentBattle.enemy.health * 0.4);
+                    gameState.currentBattle.correctResponses++;
+                    break;
+                case 'medium':
+                    damage = Math.floor(gameState.currentBattle.enemy.health * 0.2);
+                    gameState.currentBattle.correctResponses++;
+                    break;
+                case 'low':
+                    damage = Math.floor(gameState.currentBattle.enemy.health * 0.1);
+                    break;
+            }
+            
+            // Animate character attack
+            characterSprite.classList.add('attack');
+            setTimeout(() => {
+                characterSprite.classList.remove('attack');
+                enemySprite.classList.add('hit');
+                
+                // Show damage text
+                const damageText = document.createElement('div');
+                damageText.classList.add('damage-text');
+                damageText.textContent = `-${damage}`;
+                damageText.style.left = '70%';
+                damageText.style.top = '40%';
+                battleScreen.appendChild(damageText);
+                
+                setTimeout(() => {
+                    enemySprite.classList.remove('hit');
+                    battleScreen.removeChild(damageText);
+                }, 1000);
+            }, 500);
+            
+            // Apply damage to enemy
+            gameState.currentBattle.enemy.currentHealth -= damage;
+            if (gameState.currentBattle.enemy.currentHealth < 0) gameState.currentBattle.enemy.currentHealth = 0;
+            
+            // Update UI
+            updateEnemyUI();
+            
+            // Display feedback
+            dialogueText.innerHTML = `<strong>Your response:</strong> ${selectedResponse.text}<br><br><strong>Feedback:</strong> ${selectedResponse.feedback}`;
+            
+            // Check if battle is over
+            if (gameState.currentBattle.enemy.currentHealth <= 0) {
+                endBattle(true);
+                return;
+            }
+            
+            // Move to enemy turn
+            gameState.currentBattle.phase = 'enemyTurn';
+            actionButton.textContent = "Continue";
+            
+            // Reset selected response
+            gameState.currentBattle.selectedResponse = null;
+        }
+        
+        function processEnemyResponse() {
+            // Enemy "attacks" with a follow-up objection or concern
+            const followUpResponses = [
+                "But what about the cost over time?",
+                "I'm still not sure if it's worth it for me.",
+                "Can you explain more about what's covered?",
+                "I've heard some negative reviews though.",
+                "What if I need service right away?"
+            ];
+            
+            const randomResponse = followUpResponses[Math.floor(Math.random() * followUpResponses.length)];
+            
+            // Animate enemy attack
+            enemySprite.classList.add('attack');
+            setTimeout(() => {
+                enemySprite.classList.remove('attack');
+                characterSprite.classList.add('hit');
+                
+                // Calculate damage (player health reduction)
+                const damage = Math.floor(Math.random() * 15) + 5;
+                
+                // Show damage text
+                const damageText = document.createElement('div');
+                damageText.classList.add('damage-text');
+                damageText.textContent = `-${damage}`;
+                damageText.style.left = '30%';
+                damageText.style.top = '40%';
+                battleScreen.appendChild(damageText);
+                
+                setTimeout(() => {
+                    characterSprite.classList.remove('hit');
+                    battleScreen.removeChild(damageText);
+                }, 1000);
+                
+                // Apply damage to character
+                gameState.character.currentHealth -= damage;
+                if (gameState.character.currentHealth < 0) gameState.character.currentHealth = 0;
+                
+                // Update UI
+                updateCharacterUI();
+                
+                // Check if battle is over
+                if (gameState.character.currentHealth <= 0) {
+                    endBattle(false);
+                    return;
+                }
+                
+                // Display customer's follow-up
+                dialogueText.textContent = `Customer: "${randomResponse}"`;
+                
+                // Move back to player turn
+                gameState.currentBattle.phase = 'playerTurn';
+                actionButton.textContent = "Submit Response";
+                
+                // Display new response options
+                displayResponseOptions();
+                
+            }, 500);
+            
+            gameState.currentBattle.turns++;
+        }
+        
+        function endBattle(playerWon) {
+            gameState.currentBattle.battleComplete = true;
+            gameState.currentBattle.phase = 'results';
+            
+            if (playerWon) {
+                dialogueText.textContent = "Congratulations! You've successfully addressed the customer's objection.";
+                gameState.character.battlesWon++;
+                
+                // Award XP based on difficulty and performance
+                const baseXP = gameState.currentBattle.enemy.difficulty === "Easy" ? 30 : 
+                                gameState.currentBattle.enemy.difficulty === "Medium" ? 50 : 70;
+                                
+                const bonusXP = gameState.currentBattle.correctResponses * 10;
+                const totalXP = baseXP + bonusXP;
+                
+                gameState.character.xp += totalXP;
+                
+                // Check for level up
+                checkLevelUp();
+                
+                // Check for badges
+                if (gameState.currentBattle.enemy.type === "cost" && !gameState.badges.includes("Cost Master")) {
+                    gameState.badges.push("Cost Master");
+                }
+                
+                if (gameState.currentBattle.enemy.type === "necessity" && !gameState.badges.includes("Necessity Pro")) {
+                    gameState.badges.push("Necessity Pro");
+                }
+                
+                if (gameState.currentBattle.enemy.difficulty === "Hard" && playerWon && !gameState.badges.includes("Objection Crusher")) {
+                    gameState.badges.push("Objection Crusher");
+                }
+                
+                if (gameState.character.battlesWon >= 5 && !gameState.badges.includes("Seasoned Seller")) {
+                    gameState.badges.push("Seasoned Seller");
+                }
+            } else {
+                dialogueText.textContent = "The customer wasn't convinced by your responses. Don't worry, you can try again!";
+            }
+            
+            actionButton.textContent = "See Results";
+        }
+        
+        function checkLevelUp() {
+            if (gameState.character.xp >= gameState.character.nextLevelXP) {
+                gameState.character.level++;
+                gameState.character.xp -= gameState.character.nextLevelXP;
+                gameState.character.nextLevelXP = Math.floor(gameState.character.nextLevelXP * 1.5);
+                gameState.character.maxHealth += 20;
+                gameState.character.currentHealth = gameState.character.maxHealth;
+                
+                // Unlock new content based on level
+                if (gameState.character.level === 2) {
+                    gameState.unlockedContent.push("Advanced Responses");
+                }
+                
+                if (gameState.character.level === 3) {
+                    gameState.unlockedContent.push("Technical Specs Reference");
+                }
+                
+                if (gameState.character.level === 5) {
+                    gameState.unlockedContent.push("Master Negotiator");
+                }
+            }
+        }
+        
+        function showResultsScreen() {
+            showScreen(resultsScreen);
+            
+            if (gameState.currentBattle.battleComplete && gameState.character.currentHealth > 0) {
+                resultsHeader.textContent = "Victory!";
+                
+                // Calculate XP and other rewards
+                const baseXP = gameState.currentBattle.enemy.difficulty === "Easy" ? 30 : 
+                                gameState.currentBattle.enemy.difficulty === "Medium" ? 50 : 70;
+                                
+                const bonusXP = gameState.currentBattle.correctResponses * 10;
+                const totalXP = baseXP + bonusXP;
+                
+                correctResponses.textContent = gameState.currentBattle.correctResponses;
+                xpGained.textContent = totalXP;
+                newLevel.textContent = gameState.character.level;
+                battlesWon.textContent = gameState.character.battlesWon;
+                
+                // Display badges
+                badgeContainer.innerHTML = '';
+                gameState.badges.forEach(badge => {
+                    const badgeElement = document.createElement('div');
+                    badgeElement.classList.add('badge');
+                    badgeElement.textContent = badge;
+                    badgeContainer.appendChild(badgeElement);
+                });
+                
+                if (gameState.badges.length === 0) {
+                    badgeContainer.innerHTML = '<p>No badges earned yet. Keep training!</p>';
+                }
+            } else {
+                resultsHeader.textContent = "Defeat";
+                
+                correctResponses.textContent = gameState.currentBattle.correctResponses;
+                xpGained.textContent = "0";
+                newLevel.textContent = gameState.character.level;
+                battlesWon.textContent = gameState.character.battlesWon;
+                
+                badgeContainer.innerHTML = '<p>No new badges earned this battle.</p>';
+            }
+        }
+        
+        function continueBattle() {
+            showScreen(battleScreen);
+            resetBattle();
+            setupBattle();
+        }
+        
+        function returnToMainMenu() {
+            showScreen(menuScreen);
+        }
+        
+        function showScreen(screen) {
+            // Hide all screens
+            menuScreen.classList.remove('active');
+            battleScreen.classList.remove('active');
+            resultsScreen.classList.remove('active');
+            
+            // Show the requested screen
+            screen.classList.add('active');
+        }
+
+        // Initialize the game
+        updateCharacterUI();
+    </script>
+
+
+</body></html>
